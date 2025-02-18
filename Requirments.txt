@@ -1,0 +1,30 @@
+# Streamlit for frontend
+streamlit
+
+# LangChain and related dependencies
+langchain
+langchain-community
+langchain-openai
+
+# Sentence Transformers for embeddings
+sentence-transformers
+
+# FAISS for vector storage
+faiss-cpu
+
+# OpenAI for LLM (ensure API key is provided separately)
+openai
+
+# Pandas and NumPy for data handling
+pandas
+numpy
+
+# Scikit-learn for similarity metrics
+scikit-learn
+
+# FastAPI (if needed for backend API)
+fastapi
+uvicorn
+
+# Any additional dependencies
+python-dotenv  # For environment variables
