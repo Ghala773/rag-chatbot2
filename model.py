@@ -1,5 +1,5 @@
 import streamlit as st
-from langchain_openai import OpenAIEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import FAISS
 import pandas as pd
@@ -9,6 +9,7 @@ import time
 from langchain.prompts import PromptTemplate
 import os
 
+
 # Set up the Streamlit app title
 st.set_page_config(page_title="Aoun Bot", page_icon="🤖", layout="centered")
 st.title("🤖 Aoun Bot ")
@@ -16,10 +17,10 @@ st.write("Ask about events, museums, or attractions in Saudi Arabia!")
 
 # Step 2: Set up the OpenAI API key
 OPENAI_API_KEY = "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"
-COHERE_API_KEY = "MJ2obbVLH1zzSwjsfggRQii3G6duEp3tH8JXqls3"
+
 
 # Initialize embeddings
-embeddings = OpenAIEmbeddings(model="gpt-4-turbo", openai_api_key=OPENAI_API_KEY)
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 # Load and preprocess the data
 @st.cache_data
