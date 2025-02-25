@@ -1,6 +1,6 @@
 streamlit
 langchain
-langchain-openai
+langchain-google-vertexai
 faiss-cpu
 sentence-transformers
 chromadb
