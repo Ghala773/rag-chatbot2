@@ -19,7 +19,7 @@ OPENAI_API_KEY = "sk-proj-g_BgJFdagyIkKi-vrVqn7kxwYqOHEyW49zZ1Bv7VCBJpzydZVsZbqQ
 COHERE_API_KEY = "MJ2obbVLH1zzSwjsfggRQii3G6duEp3tH8JXqls3"
 
 # Initialize embeddings
-embeddings = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=OPENAI_API_KEY)
+embeddings = OpenAIEmbeddings(model="gpt-4-turbo", openai_api_key=OPENAI_API_KEY)
 
 # Load and preprocess the data
 @st.cache_data
