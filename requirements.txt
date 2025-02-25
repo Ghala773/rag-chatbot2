@@ -1,7 +1,7 @@
 streamlit
-langchain-cohere
-langchain-community
 langchain
-pandas
-chromadb
 langchain-openai
+faiss-cpu
+sentence-transformers
+chromadb
+pandas
