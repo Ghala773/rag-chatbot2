@@ -1,5 +1,5 @@
 import streamlit as st
-from langchain_cohere import CohereEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import FAISS
 import pandas as pd
@@ -15,11 +15,11 @@ st.title("🤖 Aoun Bot ")
 st.write("Ask about events, museums, or attractions in Saudi Arabia!")
 
 # Step 2: Set up the OpenAI API key
-OPENAI_API_KEY ="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"
-COHERE_API_KEY ="VxKg2to3K9aZDtNzKUzjKIv6lpJelIp52VCjLFFq"
+OPENAI_API_KEY = "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"
+COHERE_API_KEY = "MJ2obbVLH1zzSwjsfggRQii3G6duEp3tH8JXqls3"
 
 # Initialize embeddings
-embeddings = CohereEmbeddings(model="embed-english-v3.0", cohere_api_key=COHERE_API_KEY)
+embeddings = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=OPENAI_API_KEY)
 
 # Load and preprocess the data
 @st.cache_data
@@ -74,12 +74,12 @@ llm = ChatOpenAI(model="gpt-4-turbo", openai_api_key=OPENAI_API_KEY)
 
 # Prompt Template
 prompt_template = PromptTemplate(
-    input_variables=["query", "context"],  # Ensure context is included
+    input_variables=["query", "context"],
     template="""
 You are an AI assistant providing accurate information about events, museums, and attractions in Saudi Arabia. 
 
 ### **Response Format**:
-- **Event Name:** [Event Name]
+- **Event Name:** [place]
 - **Location:** [Location]
 - **Description:** [Description]
 - **Date:** [Event Start Date] - [Event End Date]
@@ -92,7 +92,7 @@ If no relevant data is found, respond with:
 ### **User Query**:
 {query}
 
-### **Context (if available)**:
+### **Context**:
 {context}
 """
 )
@@ -102,15 +102,23 @@ qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
     retriever=retriever,
-    chain_type_kwargs={"prompt": prompt_template, "document_variable_name": "context"}
+    input_key="query",  # Explicitly specify the input key
+    chain_type_kwargs={"prompt": prompt_template}
 )
 
 # Function to generate response
 def generate_response(user_input: str) -> str:
     try:
-        relevant_docs = retriever.get_relevant_documents(user_input)
-        response = qa_chain.run({"query": user_input, "context": relevant_docs})
-        return response if response else "I couldn't find any relevant information."
+        # Debugging: Print the input dictionary
+        input_dict = {"query": user_input}
+        print("Input Dictionary:", input_dict)  # Debugging line
+
+        # Pass the input dictionary to the chain
+        response = qa_chain.invoke(input_dict)
+        if "result" in response:
+            return response["result"]
+        else:
+            return "I couldn't find any relevant information."
     except Exception as e:
         st.error(f"Error generating response: {e}")
         return "An error occurred. Please try again."
