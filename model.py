@@ -10,23 +10,34 @@ from langchain.prompts import PromptTemplate
 import os
 
 
-# Set up the Streamlit app title
+# Set up Streamlit app
 st.set_page_config(page_title="Aoun Bot", page_icon="🤖", layout="centered")
-st.title("🤖 Aoun Bot ")
+st.title("🤖 Aoun Bot")
 st.write("Ask about events, museums, or attractions in Saudi Arabia!")
 
-# Step 2: Set up the OpenAI API key
+# Load API Keys securely from Streamlit Secrets
 OPENAI_API_KEY = "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"
 
 
-# Initialize embeddings
+# Initialize OpenAI language model
+llm = ChatOpenAI(model="gpt-4-turbo", openai_api_key=OPENAI_API_KEY)
+
+# Initialize Hugging Face Embeddings (Free & Local)
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-# Load and preprocess the data
+# File paths
+DATA_PATH = "Gp-data (PROTOTYPE).csv"
+FAISS_INDEX_PATH = "faiss_index"
+
+# Load and preprocess dataset
 @st.cache_data
 def load_data():
+    if not os.path.exists(DATA_PATH):
+        st.error(f"Dataset not found: {DATA_PATH}. Upload it to the GitHub repo.")
+        st.stop()
+
     try:
-        data = pd.read_csv('Gp-data (PROTOTYPE).csv', encoding='latin-1')
+        data = pd.read_csv(DATA_PATH, encoding='latin-1')
         data['combined_text'] = (
             "Description: " + data['Description'].astype(str) + ". " +
             "Location: " + data['Location'].astype(str) + ". " +
@@ -46,32 +57,30 @@ if data.empty:
     st.error("No data available. Please check the dataset and try again.")
     st.stop()
 
-# Convert text data into Document objects
+# Convert dataset into LangChain Document objects
 documents = [Document(page_content=text) for text in data['combined_text']]
 
-# Create FAISS vector store
+# Create or Load FAISS Vector Store
 @st.cache_resource
-def create_vector_store(_docs):
-    vector_store = FAISS.from_documents(_docs[:10], embeddings)
-    batch_size = 10
-    for i in range(10, len(_docs), batch_size):
+def create_or_load_vector_store(_docs):
+    if os.path.exists(FAISS_INDEX_PATH):
         try:
-            vector_store.add_documents(_docs[i:i + batch_size])
-            time.sleep(1)
+            vector_store = FAISS.load_local(FAISS_INDEX_PATH, embeddings)
+            return vector_store
         except Exception as e:
-            st.error(f"Error adding documents: {e}")
-            break
+            st.error(f"Error loading FAISS index: {e}")
+    
+    vector_store = FAISS.from_documents(_docs, embeddings)
+    vector_store.save_local(FAISS_INDEX_PATH)
     return vector_store
 
-vector_store = create_vector_store(documents)
+vector_store = create_or_load_vector_store(documents)
 if not vector_store:
-    st.error("Failed to create the vector store.")
+    st.error("Failed to create or load the vector store.")
     st.stop()
 
+# Set up retriever
 retriever = vector_store.as_retriever()
-
-# Initialize OpenAI language model
-llm = ChatOpenAI(model="gpt-4-turbo", openai_api_key=OPENAI_API_KEY)
 
 # Prompt Template
 prompt_template = PromptTemplate(
@@ -103,7 +112,6 @@ qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
     retriever=retriever,
-    input_key="query",  # Explicitly specify the input key
     chain_type_kwargs={"prompt": prompt_template}
 )
 
